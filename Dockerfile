@@ -10,9 +10,12 @@ COPY . /app
 # Install any necessary packages
 RUN pip install -r requirements.txt
 
-# Define environment variables if needed
-ENV DISCORD_TOKEN = 'MTE2NjgzMjcxMTE2NDQ5NzkyMA.G65O_T.A1s6A4FAIhWN9N74EFlNY08FMkrGHbrrjBBhgA'
-ENV openai.api_key = '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'
+ARG DISCORD_TOKEN
+ARG OPENAI_API_KEY
+
+# Set environment variables inside the Docker container
+ENV DISCORD_TOKEN=$DISCORD_TOKEN
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
