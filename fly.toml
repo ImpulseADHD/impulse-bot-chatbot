@@ -21,7 +21,7 @@ kill_timeout = 5
   name = "fly-production"
 
   [deploy.targets.pre.processes]
-    ["chatbot"] = "/app/chatbot"
+    ["chatbot"] = "/app"
 
 [build]
   builder = "docker"
