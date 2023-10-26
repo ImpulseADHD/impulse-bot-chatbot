@@ -1,0 +1,33 @@
+# fly.toml file for deploying a Docker container on Fly.io
+
+app = "impulse-bot-chatbot"  # Replace with your app name
+
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[[services]]
+  internal_port = 80
+  protocol = "tcp"
+
+  [services.concurrency]
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+[[deploy.targets]]
+  name = "fly-production"
+
+  [deploy.targets.pre.processes]
+    ["chatbot"] = "/app/chatbot"
+
+[build]
+  builder = "docker"
+  image = "impulse-bot-chatbot"  # Replace with the name of your Docker image
+  registry_mirror = "https://registry.fly.io"
+
+[deploy.env]
+  DISCORD_TOKEN = "$DISCORD_TOKEN"  # Use GitHub Secret as environment variable
+  OPENAI_API_KEY = "$OPENAI_API_KEY"  # Use GitHub Secret as environment variable
