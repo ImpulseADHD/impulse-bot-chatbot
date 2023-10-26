@@ -1,33 +1,47 @@
-# fly.toml file for deploying a Docker container on Fly.io
+# Create a Fly.io app and deploy a Docker image from a GitHub repository
 
-app = "impulse-bot-chatbot"  # Replace with your app name
+on:
+  push:
+    branches:
+      - main
 
-kill_signal = "SIGINT"
-kill_timeout = 5
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-[[services]]
-  internal_port = 80
-  protocol = "tcp"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-  [services.concurrency]
-    hard_limit = 25
-    soft_limit = 20
+      - name: Set up Docker
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
 
-  [[services.ports]]
-    handlers = ["http"]
-    port = 80
+      - name: Build the Docker image
+        run: docker build -t impulse-bot-chatbot \
+          --build-arg DISCORD_TOKEN="${{ secrets.DISCORD_TOKEN }}" \
+          --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" .
+        working-directory: ./app
 
-[[deploy.targets]]
-  name = "fly-production"
+      - name: Push the Docker image
+        run: docker push impulse-bot-chatbot
 
-[deploy.targets.pre.processes.chatbot]
-  command = "/app/chatbot"
+  deploy_to_fly:
+    needs: deploy
+    runs-on: ubuntu-latest
 
-[build]
-  builder = "docker"
-  image = "impulse-bot-chatbot"  # Replace with the name of your Docker image
-  registry_mirror = "https://registry.fly.io"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-[deploy.env]
-  DISCORD_TOKEN = "$DISCORD_TOKEN"  # Use GitHub Secret as environment variable
-  OPENAI_API_KEY = "$OPENAI_API_KEY"  # Use GitHub Secret as environment variable
+      - name: Set up Fly CLI
+        run: |
+          wget https://fly.io/install.sh
+          chmod +x install.sh
+          ./install.sh
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy to Fly.io
+        run: fly deploy --config fly.toml
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
