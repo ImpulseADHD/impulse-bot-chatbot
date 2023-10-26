@@ -1,0 +1,27 @@
+name: Build and Deploy Chatbot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build the Docker image
+        run: docker build -t my-chatbot-image \
+          --build-arg DISCORD_TOKEN="${{ secrets.DISCORD_TOKEN }}" \
+          --build-arg OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" .
+        working-directory: ./path/to/your/Dockerfile/directory
+
+      - name: Push the Docker image
+        run: docker push my-chatbot-image
+
